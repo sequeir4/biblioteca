@@ -1,0 +1,30 @@
+body {
+  margin: 0;
+}
+ 
+body::after {
+  content: "";
+  background: url("https://informacoeseservicos.lisboa.pt/fileadmin/espacos/imagens/bibliotecaOrlandoRibeiro_ALA0751.jpg");
+  background-size: cover;
+  opacity: 0.2;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  z-index: -1;   
+}
+
+p {
+  margin: auto;
+  margin-top: 10%;
+  font-family: sans-serif;
+  text-align: center;
+  font-size: 1.8em;
+  font-weight: bold;
+  padding: 40px;
+  background-color: rgba(0,0,0,0.3);
+  border: 1px solid black;
+  width: 25%;
+}
+
