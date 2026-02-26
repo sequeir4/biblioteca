@@ -1,30 +1,110 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-}
- 
-body::after {
-  content: "";
-  background: url("https://informacoeseservicos.lisboa.pt/fileadmin/espacos/imagens/bibliotecaOrlandoRibeiro_ALA0751.jpg");
-  background-size: cover;
-  opacity: 0.2;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  position: absolute;
-  z-index: -1;   
+  min-height: 100vh;
+  background: linear-gradient(165deg, #f2f4f7 0%, #e9eef5 100%);
+  color: #101418;
 }
 
-p {
-  margin: auto;
-  margin-top: 10%;
-  font-family: sans-serif;
-  text-align: center;
-  font-size: 1.8em;
-  font-weight: bold;
-  padding: 40px;
-  background-color: rgba(0,0,0,0.3);
-  border: 1px solid black;
-  width: 25%;
+.app {
+  width: min(720px, 100% - 2rem);
+  margin: 0 auto;
+  padding: 1.5rem 0 2rem;
 }
 
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+h1 {
+  margin: 0.25rem 0 1.25rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.2;
+}
+
+.status-card,
+.info-item {
+  background: #fff;
+  border: 1px solid #d0d7e2;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.status-card {
+  margin-bottom: 0.9rem;
+  border-left: 6px solid #4b5563;
+}
+
+.status-card.is-open {
+  border-left-color: #0f7a34;
+}
+
+.status-card.is-closed {
+  border-left-color: #a91a24;
+}
+
+.status-badge {
+  display: inline-block;
+  margin: 0;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+}
+
+.status-main {
+  margin: 0.8rem 0 0.3rem;
+  font-size: clamp(1.05rem, 2.6vw, 1.3rem);
+  font-weight: 700;
+}
+
+.status-detail {
+  margin: 0;
+  color: #334155;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+.info-item h2 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.info-item p {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .app {
+    padding-top: 2.5rem;
+  }
+
+  .info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

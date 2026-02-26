@@ -1,12 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-PT">
 <head>
   <meta charset="UTF-8">
-  <title>Está aberta a biblioteca?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Biblioteca Orlando Ribeiro · Está aberta?</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <p id="status"></p>
+  <main class="app" aria-live="polite">
+    <header>
+      <p class="eyebrow">Biblioteca Orlando Ribeiro</p>
+      <h1>Está aberta agora?</h1>
+    </header>
+
+    <section class="status-card" id="status-card">
+      <p class="status-badge" id="status-badge">A carregar…</p>
+      <p class="status-main" id="status-main">A validar horário.</p>
+      <p class="status-detail" id="status-detail"></p>
+    </section>
+
+    <section class="info-grid">
+      <article class="info-item">
+        <h2>Próxima mudança</h2>
+        <p id="next-change">—</p>
+      </article>
+
+      <article class="info-item">
+        <h2>Horário de hoje</h2>
+        <p id="today-hours">—</p>
+      </article>
+    </section>
+  </main>
+
   <script src="script.js"></script>
 </body>
 </html>
