@@ -13,10 +13,29 @@
       <h1>Está aberta agora?</h1>
     </header>
 
+    <section class="hero" aria-label="Fotografia da biblioteca">
+      <img
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Biblioteca_Municipal_Orlando_Ribeiro_%28Telheiras%29.jpg/1280px-Biblioteca_Municipal_Orlando_Ribeiro_%28Telheiras%29.jpg"
+        alt="Fachada da Biblioteca Orlando Ribeiro"
+        loading="lazy"
+      >
+    </section>
+
     <section class="status-card" id="status-card">
       <p class="status-badge" id="status-badge">A carregar…</p>
       <p class="status-main" id="status-main">A validar horário.</p>
       <p class="status-detail" id="status-detail"></p>
+      <p class="status-soon" id="status-soon"></p>
+      <div class="quick-actions">
+        <a id="maps-link" class="button" href="https://www.google.com/maps/dir/?api=1&destination=Biblioteca+Orlando+Ribeiro+Lisboa" target="_blank" rel="noopener noreferrer">Abrir no Google Maps</a>
+      </div>
+    </section>
+
+    <section class="schedule-controls" aria-label="Selecionar dia">
+      <button id="prev-day" class="button button-ghost" type="button">◀ Dia anterior</button>
+      <label for="selected-date" class="date-label">Escolher dia</label>
+      <input id="selected-date" type="date">
+      <button id="next-day" class="button button-ghost" type="button">Próximo dia ▶</button>
     </section>
 
     <section class="info-grid">
@@ -26,8 +45,18 @@
       </article>
 
       <article class="info-item">
-        <h2>Horário de hoje</h2>
-        <p id="today-hours">—</p>
+        <h2>Horário do dia selecionado</h2>
+        <p id="selected-day-hours">—</p>
+      </article>
+
+      <article class="info-item day-card">
+        <h2 id="previous-day-title">Dia anterior</h2>
+        <p id="previous-day-hours">—</p>
+      </article>
+
+      <article class="info-item day-card">
+        <h2 id="next-day-title">Próximo dia</h2>
+        <p id="next-day-hours">—</p>
       </article>
     </section>
   </main>

@@ -1,6 +1,7 @@
 const DEFAULT_CONFIG = {
   timezone: "Europe/Lisbon",
-  libraryName: "Biblioteca Orlando Ribeiro"
+  libraryName: "Biblioteca Orlando Ribeiro",
+  mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=Biblioteca+Orlando+Ribeiro+Lisboa"
 };
 
 const ids = {
@@ -8,9 +9,29 @@ const ids = {
   badge: document.getElementById("status-badge"),
   main: document.getElementById("status-main"),
   detail: document.getElementById("status-detail"),
+  soon: document.getElementById("status-soon"),
   nextChange: document.getElementById("next-change"),
-  todayHours: document.getElementById("today-hours")
+  selectedDayHours: document.getElementById("selected-day-hours"),
+  previousDayTitle: document.getElementById("previous-day-title"),
+  previousDayHours: document.getElementById("previous-day-hours"),
+  nextDayTitle: document.getElementById("next-day-title"),
+  nextDayHours: document.getElementById("next-day-hours"),
+  selectedDateInput: document.getElementById("selected-date"),
+  prevDayButton: document.getElementById("prev-day"),
+  nextDayButton: document.getElementById("next-day"),
+  mapsLink: document.getElementById("maps-link")
 };
+
+let appState = {
+  config: null,
+  selectedDate: new Date()
+};
+
+function setText(element, value) {
+  if (element) {
+    element.textContent = value;
+  }
+}
 
 function formatDate(date, locale = "pt-PT") {
   return new Intl.DateTimeFormat(locale, {
@@ -31,6 +52,17 @@ function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+function parseDateKey(key) {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDays(baseDate, days) {
+  const date = new Date(baseDate);
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
 function toDateWithTime(baseDate, hhmm) {
   const [hours, minutes] = hhmm.split(":").map(Number);
   const date = new Date(baseDate);
@@ -43,8 +75,7 @@ function isLastWednesday(date) {
     return false;
   }
 
-  const plusSeven = new Date(date);
-  plusSeven.setDate(date.getDate() + 7);
+  const plusSeven = addDays(date, 7);
   return plusSeven.getMonth() !== date.getMonth();
 }
 
@@ -97,12 +128,20 @@ function isOpenNow(now, config) {
   return getIntervalsForDate(now, config).some((interval) => now >= interval.open && now < interval.close);
 }
 
+function formatIntervals(intervals) {
+  if (intervals.length === 0) {
+    return "Encerrada.";
+  }
+
+  return intervals.map((interval) => `${formatHour(interval.open)}–${formatHour(interval.close)}`).join(" · ");
+}
+
 function getStatusReason(now, config) {
   const day = now.getDay();
   const key = dateKey(now);
 
   if (!inEffectiveWindow(now, config)) {
-    return "Fora do período de horário publicado (jan-jul 2026).";
+    return "Fora do período de horário publicado.";
   }
 
   if (day === 0) {
@@ -117,7 +156,7 @@ function getStatusReason(now, config) {
     return "Ao sábado abre apenas nas datas publicadas.";
   }
 
-  if (isLastWednesday(now) && now.getHours() >= 14) {
+  if (isLastWednesday(now)) {
     return "Na última quarta-feira de cada mês encerra às 14:00.";
   }
 
@@ -140,6 +179,54 @@ function getStatusReason(now, config) {
   return "Dentro do horário de funcionamento.";
 }
 
+function minutesUntil(fromDate, toDate) {
+  return Math.max(0, Math.round((toDate - fromDate) / 60000));
+}
+
+function formatMinutesAsDuration(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) {
+    return `${minutes} minuto${minutes === 1 ? "" : "s"}`;
+  }
+
+  if (minutes === 0) {
+    return `${hours} hora${hours === 1 ? "" : "s"}`;
+  }
+
+  return `${hours} hora${hours === 1 ? "" : "s"} e ${minutes} minuto${minutes === 1 ? "" : "s"}`;
+}
+
+function getSoonMessage(now, config) {
+  const intervals = getIntervalsForDate(now, config);
+  if (intervals.length === 0) {
+    return "";
+  }
+
+  for (const interval of intervals) {
+    if (now >= interval.open && now < interval.close) {
+      const minsToClose = minutesUntil(now, interval.close);
+      if (minsToClose <= 60) {
+        return `⚠️ Fecha em breve: encerra em ${formatMinutesAsDuration(minsToClose)}.`;
+      }
+
+      return `Fecha em ${formatMinutesAsDuration(minsToClose)}.`;
+    }
+
+    if (now < interval.open) {
+      const minsToOpen = minutesUntil(now, interval.open);
+      if (minsToOpen <= 60) {
+        return `🕒 Abre em breve: abre em ${formatMinutesAsDuration(minsToOpen)}.`;
+      }
+
+      return `Abre em ${formatMinutesAsDuration(minsToOpen)}.`;
+    }
+  }
+
+  return "Já não volta a abrir hoje.";
+}
+
 function getNextChange(now, config) {
   const todayIntervals = getIntervalsForDate(now, config);
 
@@ -154,8 +241,7 @@ function getNextChange(now, config) {
   }
 
   for (let offset = 1; offset <= 370; offset += 1) {
-    const candidate = new Date(now);
-    candidate.setDate(candidate.getDate() + offset);
+    const candidate = addDays(now, offset);
     candidate.setHours(0, 0, 0, 0);
 
     const intervals = getIntervalsForDate(candidate, config);
@@ -167,29 +253,72 @@ function getNextChange(now, config) {
   return "Sem próxima abertura definida no calendário.";
 }
 
-function getTodayHours(now, config) {
-  const intervals = getIntervalsForDate(now, config);
-  if (intervals.length === 0) {
-    return "Encerrada hoje.";
-  }
+function renderSelectedDaySection(selectedDate, config) {
+  const previousDay = addDays(selectedDate, -1);
+  const nextDay = addDays(selectedDate, 1);
 
-  return intervals.map((interval) => `${formatHour(interval.open)}–${formatHour(interval.close)}`).join(" · ");
+  const selectedIntervals = getIntervalsForDate(selectedDate, config);
+  const previousIntervals = getIntervalsForDate(previousDay, config);
+  const nextIntervals = getIntervalsForDate(nextDay, config);
+
+  setText(ids.selectedDayHours, `${formatDate(selectedDate)} · ${formatIntervals(selectedIntervals)}`);
+  setText(ids.previousDayTitle, `Dia anterior (${formatDate(previousDay)})`);
+  setText(ids.previousDayHours, formatIntervals(previousIntervals));
+  setText(ids.nextDayTitle, `Próximo dia (${formatDate(nextDay)})`);
+  setText(ids.nextDayHours, formatIntervals(nextIntervals));
+
+  if (ids.selectedDateInput) {
+    ids.selectedDateInput.value = dateKey(selectedDate);
+  }
 }
 
 function renderStatus(now, config) {
   const open = isOpenNow(now, config);
 
-  ids.card.classList.toggle("is-open", open);
-  ids.card.classList.toggle("is-closed", !open);
+  if (ids.card) {
+    ids.card.classList.toggle("is-open", open);
+    ids.card.classList.toggle("is-closed", !open);
+  }
 
-  ids.badge.textContent = open ? "ABERTA" : "FECHADA";
-  ids.main.textContent = open
-    ? `${config.libraryName || DEFAULT_CONFIG.libraryName} está aberta agora.`
-    : `${config.libraryName || DEFAULT_CONFIG.libraryName} está fechada agora.`;
+  setText(ids.badge, open ? "ABERTA" : "FECHADA");
+  setText(
+    ids.main,
+    open
+      ? `${config.libraryName || DEFAULT_CONFIG.libraryName} está aberta agora.`
+      : `${config.libraryName || DEFAULT_CONFIG.libraryName} está fechada agora.`
+  );
 
-  ids.detail.textContent = getStatusReason(now, config);
-  ids.nextChange.textContent = getNextChange(now, config);
-  ids.todayHours.textContent = getTodayHours(now, config);
+  setText(ids.detail, getStatusReason(now, config));
+  setText(ids.soon, getSoonMessage(now, config));
+  setText(ids.nextChange, getNextChange(now, config));
+  renderSelectedDaySection(appState.selectedDate, config);
+}
+
+function bindEvents() {
+  if (ids.prevDayButton) {
+    ids.prevDayButton.addEventListener("click", () => {
+      appState.selectedDate = addDays(appState.selectedDate, -1);
+      renderSelectedDaySection(appState.selectedDate, appState.config);
+    });
+  }
+
+  if (ids.nextDayButton) {
+    ids.nextDayButton.addEventListener("click", () => {
+      appState.selectedDate = addDays(appState.selectedDate, 1);
+      renderSelectedDaySection(appState.selectedDate, appState.config);
+    });
+  }
+
+  if (ids.selectedDateInput) {
+    ids.selectedDateInput.addEventListener("change", (event) => {
+      if (!event.target.value) {
+        return;
+      }
+
+      appState.selectedDate = parseDateKey(event.target.value);
+      renderSelectedDaySection(appState.selectedDate, appState.config);
+    });
+  }
 }
 
 async function loadScheduleConfig() {
@@ -205,14 +334,30 @@ async function init() {
   try {
     const config = await loadScheduleConfig();
     const now = new Date();
+
+    appState = {
+      config,
+      selectedDate: new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    };
+
+    if (ids.mapsLink) {
+      ids.mapsLink.href = config.mapsUrl || DEFAULT_CONFIG.mapsUrl;
+    }
+
+    bindEvents();
     renderStatus(now, config);
   } catch (error) {
-    ids.card.classList.add("is-closed");
-    ids.badge.textContent = "ERRO";
-    ids.main.textContent = "Não foi possível carregar o horário.";
-    ids.detail.textContent = error.message;
-    ids.nextChange.textContent = "—";
-    ids.todayHours.textContent = "—";
+    if (ids.card) {
+      ids.card.classList.add("is-closed");
+    }
+    setText(ids.badge, "ERRO");
+    setText(ids.main, "Não foi possível carregar o horário.");
+    setText(ids.detail, error.message);
+    setText(ids.soon, "");
+    setText(ids.nextChange, "—");
+    setText(ids.selectedDayHours, "—");
+    setText(ids.previousDayHours, "—");
+    setText(ids.nextDayHours, "—");
   }
 }
 
