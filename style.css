@@ -15,7 +15,7 @@ body {
 }
 
 .app {
-  width: min(720px, 100% - 2rem);
+  width: min(900px, 100% - 2rem);
   margin: 0 auto;
   padding: 1.5rem 0 2rem;
 }
@@ -35,8 +35,24 @@ h1 {
   line-height: 1.2;
 }
 
+.hero {
+  margin-bottom: 1rem;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #d0d7e2;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.hero img {
+  display: block;
+  width: 100%;
+  height: min(310px, 42vw);
+  object-fit: cover;
+}
+
 .status-card,
-.info-item {
+.info-item,
+.schedule-controls {
   background: #fff;
   border: 1px solid #d0d7e2;
   border-radius: 14px;
@@ -74,9 +90,63 @@ h1 {
   font-weight: 700;
 }
 
-.status-detail {
-  margin: 0;
+.status-detail,
+.status-soon {
+  margin: 0.3rem 0;
   color: #334155;
+}
+
+.status-soon {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.quick-actions {
+  margin-top: 0.8rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+  text-decoration: none;
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:hover {
+  filter: brightness(1.08);
+}
+
+.button-ghost {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.schedule-controls {
+  margin-bottom: 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.date-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+input[type="date"] {
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.55rem;
+  font-size: 1rem;
 }
 
 .info-grid {
@@ -99,9 +169,18 @@ h1 {
   font-weight: 600;
 }
 
+.day-card p {
+  font-weight: 500;
+}
+
 @media (min-width: 640px) {
   .app {
     padding-top: 2.5rem;
+  }
+
+  .schedule-controls {
+    grid-template-columns: auto auto 1fr auto;
+    gap: 0.75rem;
   }
 
   .info-grid {

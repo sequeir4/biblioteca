@@ -1,8 +1,9 @@
 {
   "timezone": "Europe/Lisbon",
   "libraryName": "Biblioteca Orlando Ribeiro",
-  "effectiveStart": "2026-01-01",
-  "effectiveEnd": "2026-07-31",
+  "mapsUrl": "https://www.google.com/maps/dir/?api=1&destination=Biblioteca+Orlando+Ribeiro+Lisboa",
+  "effectiveStart": "2025-01-01",
+  "effectiveEnd": "2026-12-31",
   "regularHours": {
     "1": [{ "open": "10:00", "close": "18:00" }],
     "2": [{ "open": "10:00", "close": "18:00" }],
