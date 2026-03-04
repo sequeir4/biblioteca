@@ -1,7 +1,7 @@
 const DEFAULT_CONFIG = {
   timezone: "Europe/Lisbon",
   libraryName: "Biblioteca Orlando Ribeiro",
-  mapsUrl: "https://www.google.com/maps/search/?api=1&query=Biblioteca+Orlando+Ribeiro"
+  mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=Biblioteca+Orlando+Ribeiro+Lisboa"
 };
 
 const ids = {
@@ -26,6 +26,12 @@ let appState = {
   config: null,
   selectedDate: new Date()
 };
+
+function setText(element, value) {
+  if (element) {
+    element.textContent = value;
+  }
+}
 
 function formatDate(date, locale = "pt-PT") {
   return new Intl.DateTimeFormat(locale, {
@@ -177,6 +183,21 @@ function minutesUntil(fromDate, toDate) {
   return Math.max(0, Math.round((toDate - fromDate) / 60000));
 }
 
+function formatMinutesAsDuration(totalMinutes) {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) {
+    return `${minutes} minuto${minutes === 1 ? "" : "s"}`;
+  }
+
+  if (minutes === 0) {
+    return `${hours} hora${hours === 1 ? "" : "s"}`;
+  }
+
+  return `${hours} hora${hours === 1 ? "" : "s"} e ${minutes} minuto${minutes === 1 ? "" : "s"}`;
+}
+
 function getSoonMessage(now, config) {
   const intervals = getIntervalsForDate(now, config);
   if (intervals.length === 0) {
@@ -187,19 +208,19 @@ function getSoonMessage(now, config) {
     if (now >= interval.open && now < interval.close) {
       const minsToClose = minutesUntil(now, interval.close);
       if (minsToClose <= 60) {
-        return `⚠️ Fecha em breve: encerra em ${minsToClose} minuto${minsToClose === 1 ? "" : "s"}.`;
+        return `⚠️ Fecha em breve: encerra em ${formatMinutesAsDuration(minsToClose)}.`;
       }
 
-      return `Fecha em ${minsToClose} minuto${minsToClose === 1 ? "" : "s"}.`;
+      return `Fecha em ${formatMinutesAsDuration(minsToClose)}.`;
     }
 
     if (now < interval.open) {
       const minsToOpen = minutesUntil(now, interval.open);
       if (minsToOpen <= 60) {
-        return `🕒 Abre em breve: abre em ${minsToOpen} minuto${minsToOpen === 1 ? "" : "s"}.`;
+        return `🕒 Abre em breve: abre em ${formatMinutesAsDuration(minsToOpen)}.`;
       }
 
-      return `Abre em ${minsToOpen} minuto${minsToOpen === 1 ? "" : "s"}.`;
+      return `Abre em ${formatMinutesAsDuration(minsToOpen)}.`;
     }
   }
 
@@ -240,50 +261,64 @@ function renderSelectedDaySection(selectedDate, config) {
   const previousIntervals = getIntervalsForDate(previousDay, config);
   const nextIntervals = getIntervalsForDate(nextDay, config);
 
-  ids.selectedDayHours.textContent = `${formatDate(selectedDate)} · ${formatIntervals(selectedIntervals)}`;
-  ids.previousDayTitle.textContent = `Dia anterior (${formatDate(previousDay)})`;
-  ids.previousDayHours.textContent = formatIntervals(previousIntervals);
-  ids.nextDayTitle.textContent = `Próximo dia (${formatDate(nextDay)})`;
-  ids.nextDayHours.textContent = formatIntervals(nextIntervals);
-  ids.selectedDateInput.value = dateKey(selectedDate);
+  setText(ids.selectedDayHours, `${formatDate(selectedDate)} · ${formatIntervals(selectedIntervals)}`);
+  setText(ids.previousDayTitle, `Dia anterior (${formatDate(previousDay)})`);
+  setText(ids.previousDayHours, formatIntervals(previousIntervals));
+  setText(ids.nextDayTitle, `Próximo dia (${formatDate(nextDay)})`);
+  setText(ids.nextDayHours, formatIntervals(nextIntervals));
+
+  if (ids.selectedDateInput) {
+    ids.selectedDateInput.value = dateKey(selectedDate);
+  }
 }
 
 function renderStatus(now, config) {
   const open = isOpenNow(now, config);
 
-  ids.card.classList.toggle("is-open", open);
-  ids.card.classList.toggle("is-closed", !open);
+  if (ids.card) {
+    ids.card.classList.toggle("is-open", open);
+    ids.card.classList.toggle("is-closed", !open);
+  }
 
-  ids.badge.textContent = open ? "ABERTA" : "FECHADA";
-  ids.main.textContent = open
-    ? `${config.libraryName || DEFAULT_CONFIG.libraryName} está aberta agora.`
-    : `${config.libraryName || DEFAULT_CONFIG.libraryName} está fechada agora.`;
+  setText(ids.badge, open ? "ABERTA" : "FECHADA");
+  setText(
+    ids.main,
+    open
+      ? `${config.libraryName || DEFAULT_CONFIG.libraryName} está aberta agora.`
+      : `${config.libraryName || DEFAULT_CONFIG.libraryName} está fechada agora.`
+  );
 
-  ids.detail.textContent = getStatusReason(now, config);
-  ids.soon.textContent = getSoonMessage(now, config);
-  ids.nextChange.textContent = getNextChange(now, config);
+  setText(ids.detail, getStatusReason(now, config));
+  setText(ids.soon, getSoonMessage(now, config));
+  setText(ids.nextChange, getNextChange(now, config));
   renderSelectedDaySection(appState.selectedDate, config);
 }
 
 function bindEvents() {
-  ids.prevDayButton.addEventListener("click", () => {
-    appState.selectedDate = addDays(appState.selectedDate, -1);
-    renderSelectedDaySection(appState.selectedDate, appState.config);
-  });
+  if (ids.prevDayButton) {
+    ids.prevDayButton.addEventListener("click", () => {
+      appState.selectedDate = addDays(appState.selectedDate, -1);
+      renderSelectedDaySection(appState.selectedDate, appState.config);
+    });
+  }
 
-  ids.nextDayButton.addEventListener("click", () => {
-    appState.selectedDate = addDays(appState.selectedDate, 1);
-    renderSelectedDaySection(appState.selectedDate, appState.config);
-  });
+  if (ids.nextDayButton) {
+    ids.nextDayButton.addEventListener("click", () => {
+      appState.selectedDate = addDays(appState.selectedDate, 1);
+      renderSelectedDaySection(appState.selectedDate, appState.config);
+    });
+  }
 
-  ids.selectedDateInput.addEventListener("change", (event) => {
-    if (!event.target.value) {
-      return;
-    }
+  if (ids.selectedDateInput) {
+    ids.selectedDateInput.addEventListener("change", (event) => {
+      if (!event.target.value) {
+        return;
+      }
 
-    appState.selectedDate = parseDateKey(event.target.value);
-    renderSelectedDaySection(appState.selectedDate, appState.config);
-  });
+      appState.selectedDate = parseDateKey(event.target.value);
+      renderSelectedDaySection(appState.selectedDate, appState.config);
+    });
+  }
 }
 
 async function loadScheduleConfig() {
@@ -305,20 +340,24 @@ async function init() {
       selectedDate: new Date(now.getFullYear(), now.getMonth(), now.getDate())
     };
 
-    ids.mapsLink.href = config.mapsUrl || DEFAULT_CONFIG.mapsUrl;
+    if (ids.mapsLink) {
+      ids.mapsLink.href = config.mapsUrl || DEFAULT_CONFIG.mapsUrl;
+    }
 
     bindEvents();
     renderStatus(now, config);
   } catch (error) {
-    ids.card.classList.add("is-closed");
-    ids.badge.textContent = "ERRO";
-    ids.main.textContent = "Não foi possível carregar o horário.";
-    ids.detail.textContent = error.message;
-    ids.soon.textContent = "";
-    ids.nextChange.textContent = "—";
-    ids.selectedDayHours.textContent = "—";
-    ids.previousDayHours.textContent = "—";
-    ids.nextDayHours.textContent = "—";
+    if (ids.card) {
+      ids.card.classList.add("is-closed");
+    }
+    setText(ids.badge, "ERRO");
+    setText(ids.main, "Não foi possível carregar o horário.");
+    setText(ids.detail, error.message);
+    setText(ids.soon, "");
+    setText(ids.nextChange, "—");
+    setText(ids.selectedDayHours, "—");
+    setText(ids.previousDayHours, "—");
+    setText(ids.nextDayHours, "—");
   }
 }
 
